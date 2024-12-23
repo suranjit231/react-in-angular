@@ -4,9 +4,18 @@ import { CalculatorService } from '../services/calculator.service';
 
 declare global {
   interface Window {
-    React: any;
-    ReactDOM: any;
-    App: any;
+    React: {
+      createElement: (type: any, props?: any) => any;
+    };
+    ReactDOM: {
+      createRoot: (container: Element) => {
+        render: (element: any) => void;
+        unmount: () => void;
+      };
+    };
+    App: {
+      A: any;
+    };
   }
 }
 
@@ -16,8 +25,8 @@ declare global {
   imports: [CommonModule],
   template: `
     <div class="react-container">
-      <div id="reactRoot"></div>
-      <div *ngIf="error" class="error-message">{{ error }}</div>
+      <div #reactRoot></div>
+      <div *ngIf="error" class="error">{{ error }}</div>
     </div>
   `,
   styles: [`
@@ -25,18 +34,16 @@ declare global {
       width: 100%;
       height: 100%;
     }
-    .error-message {
+    .error {
       color: red;
       padding: 10px;
-      margin-top: 10px;
-      border: 1px solid red;
-      border-radius: 4px;
     }
   `]
 })
 export class ReactWrapperComponent implements OnInit, OnDestroy {
   error: string | null = null;
   private reactRoot: HTMLElement | null = null;
+  private root: any = null;
 
   constructor(
     private calculatorService: CalculatorService,
@@ -45,17 +52,16 @@ export class ReactWrapperComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.reactRoot = this.elementRef.nativeElement.querySelector('#reactRoot');
-    if (!this.reactRoot) {
-      this.setError('React root element not found');
-      return;
-    }
+    this.reactRoot = document.createElement('div');
+    this.elementRef.nativeElement.appendChild(this.reactRoot);
 
-    // Load React CSS
     const link = document.createElement('link');
     link.rel = 'stylesheet';
     link.href = '/static/css/main.55707f56.css';
     document.head.appendChild(link);
+
+    // Add event listener first
+    window.addEventListener('calculatorResult', this.handleCalculatorResult);
 
     this.loadScript('https://unpkg.com/react@18/umd/react.development.js')
       .then(() => this.loadScript('https://unpkg.com/react-dom@18/umd/react-dom.development.js'))
@@ -72,26 +78,24 @@ export class ReactWrapperComponent implements OnInit, OnDestroy {
       const script = document.createElement('script');
       script.src = src;
       script.onload = () => resolve();
-      script.onerror = (error) => {
-        console.error(`Failed to load script: ${src}`, error);
-        reject(new Error(`Failed to load script: ${src}`));
-      };
+      script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
       document.body.appendChild(script);
     });
   }
 
   private initializeReactApp(): void {
-    if (!this.reactRoot || !window.React || !window.ReactDOM || !window.App) {
-      this.setError('React dependencies not loaded properly');
+    if (!this.reactRoot || !window.React || !window.ReactDOM || !window.App?.A) {
+      setTimeout(() => this.initializeReactApp(), 100);
       return;
     }
 
     try {
-      const root = window.ReactDOM.createRoot(this.reactRoot);
-      const app = window.React.createElement(window.App);
-      root.render(app);
-
-      window.addEventListener('calculatorResult', this.handleCalculatorResult);
+      if (!this.root) {
+        this.root = window.ReactDOM.createRoot(this.reactRoot);
+      }
+      
+      const element = window.React.createElement(window.App.A);
+      this.root.render(element);
     } catch (error) {
       console.error('Error initializing React app:', error);
       this.setError('Failed to initialize React calculator');
@@ -99,9 +103,16 @@ export class ReactWrapperComponent implements OnInit, OnDestroy {
   }
 
   private handleCalculatorResult = (event: any): void => {
+    console.log('Calculator event received:', event);
+    console.log('Event detail:', event.detail);
+    
     this.ngZone.run(() => {
       const result = event.detail?.result;
-      if (typeof result === 'number') {
+      console.log('Extracted result:', result);
+      this.calculatorService.updateResult(result);
+      
+      if (result !== undefined && result !== null) {
+        console.log('Updating calculator service with result:', result);
         this.calculatorService.updateResult(result);
       }
     });
@@ -116,5 +127,9 @@ export class ReactWrapperComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     window.removeEventListener('calculatorResult', this.handleCalculatorResult);
+    if (this.root) {
+      this.root.unmount();
+      this.root = null;
+    }
   }
 }
