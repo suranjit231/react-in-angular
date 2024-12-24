@@ -3,22 +3,8 @@ import { Component, OnInit, OnDestroy, ElementRef, NgZone } from '@angular/core'
 import { CommonModule } from '@angular/common';
 import { SecondAppService } from '../services/second-app.service';
 
-declare global {
-  interface Window {
-    React: {
-      createElement: (type: any, props?: any) => any;
-    };
-    ReactDOM: {
-      createRoot: (container: Element) => {
-        render: (element: any) => void;
-        unmount: () => void;
-      };
-    };
-    App2: {  
-      A: any;
-    };
-  }
-}
+
+
 
 @Component({
   selector: 'app-react-wrapper2',

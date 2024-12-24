@@ -21,34 +21,12 @@
             ],
             "tsConfig": "tsconfig.app.json",
             "assets": [
-              {
-                "glob": "**/*",
-                "input": "public"
-              },
-              {
-                "glob": "**/*",
-                "input": "src/assets",
-                "output": "/assets"
-              },
+              "src/favicon.ico",
+              "src/assets",
               {
                 "glob": "**/*",
                 "input": "src/react-build/build",
-                "output": "/"
-              },
-              {
-                "glob": "**/*",
-                "input": "src/react-build2/build",
-                "output": "/"
-              },
-              {
-                "glob": "favicon.ico",
-                "input": "src/",
-                "output": "/"
-              },
-              {
-                "glob": "manifest.json",
-                "input": "src/react-build/build",
-                "output": "/"
+                "output": "/assets/react-build"
               }
             ],
             "styles": [

@@ -38,7 +38,7 @@ import { LoginComponent } from './login/login.component';
 
 export const routes: Routes = [
   {
-    path: 'react-app',
+    path: 'react-app/:id',
     component: ReactWrapperComponent,
   },
   {
