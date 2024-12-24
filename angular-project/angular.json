@@ -36,6 +36,11 @@
                 "output": "/"
               },
               {
+                "glob": "**/*",
+                "input": "src/react-build2/build",
+                "output": "/"
+              },
+              {
                 "glob": "favicon.ico",
                 "input": "src/",
                 "output": "/"

@@ -1,9 +1,7 @@
-
-// --- react-wrapper for react app first one -------------//
-
+// src/app/react-wrapper2/react-wrapper2.component.ts
 import { Component, OnInit, OnDestroy, ElementRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { CalculatorService } from '../services/calculator.service';
+import { SecondAppService } from '../services/second-app.service';
 
 declare global {
   interface Window {
@@ -16,21 +14,21 @@ declare global {
         unmount: () => void;
       };
     };
-    App: {
+    App2: {  
       A: any;
     };
   }
 }
 
 @Component({
-  selector: 'app-react-wrapper',
+  selector: 'app-react-wrapper2',
   standalone: true,
   imports: [CommonModule],
   template: `
     <div class="page-container">
       <a href="/logIn" class="nav-button">Back to Login</a>
       <div class="react-container">
-        <div #reactRoot></div>
+        <div id="root2" #reactRoot></div>
         <div *ngIf="error" class="error">{{ error }}</div>
       </div>
     </div>
@@ -62,32 +60,37 @@ declare global {
     }
   `]
 })
-export class ReactWrapperComponent implements OnInit, OnDestroy {
+export class ReactWrapper2Component implements OnInit, OnDestroy {
   error: string | null = null;
   private reactRoot: HTMLElement | null = null;
   private root: any = null;
 
   constructor(
-    private calculatorService: CalculatorService,
+    private secondAppService: SecondAppService,
     private elementRef: ElementRef,
     private ngZone: NgZone
   ) {}
 
   ngOnInit(): void {
-    this.reactRoot = document.createElement('div');
-    this.elementRef.nativeElement.appendChild(this.reactRoot);
+    this.reactRoot = document.getElementById('root2');
+    if (!this.reactRoot) {
+      this.setError('Could not find root2 element');
+      return;
+    }
 
+    // Add CSS for React app
     const link = document.createElement('link');
     link.rel = 'stylesheet';
-    link.href = '/static/css/main.55707f56.css';
+    link.href = '/static/css/main.0af9025b.css';
     document.head.appendChild(link);
 
-    // Add event listener first
-    window.addEventListener('calculatorResult', this.handleCalculatorResult);
+    // Add event listener for reviews
+    window.addEventListener('reviewResult', this.handleReviewEvent);
 
+    // Load necessary scripts
     this.loadScript('https://unpkg.com/react@18/umd/react.development.js')
       .then(() => this.loadScript('https://unpkg.com/react-dom@18/umd/react-dom.development.js'))
-      .then(() => this.loadScript('/static/js/main.d72fdbc8.js'))
+      .then(() => this.loadScript('/static/js/main.691819e6.js'))
       .then(() => this.initializeReactApp())
       .catch(error => {
         console.error('Error loading scripts:', error);
@@ -106,7 +109,7 @@ export class ReactWrapperComponent implements OnInit, OnDestroy {
   }
 
   private initializeReactApp(): void {
-    if (!this.reactRoot || !window.React || !window.ReactDOM || !window.App?.A) {
+    if (!this.reactRoot || !window.React || !window.ReactDOM || !window.App2?.A) {
       setTimeout(() => this.initializeReactApp(), 100);
       return;
     }
@@ -116,26 +119,22 @@ export class ReactWrapperComponent implements OnInit, OnDestroy {
         this.root = window.ReactDOM.createRoot(this.reactRoot);
       }
       
-      const element = window.React.createElement(window.App.A);
+      const element = window.React.createElement(window.App2.A);
       this.root.render(element);
     } catch (error) {
       console.error('Error initializing React app:', error);
-      this.setError('Failed to initialize React calculator');
+      this.setError('Failed to initialize reviews app');
     }
   }
 
-  private handleCalculatorResult = (event: any): void => {
-    console.log('Calculator event received:', event);
-    console.log('Event detail:', event.detail);
+  private handleReviewEvent = (event: any): void => {
+    console.log('Review event received:', event);
     
     this.ngZone.run(() => {
-      const result = event.detail?.result;
-      console.log('Extracted result:', result);
-      this.calculatorService.updateResult(result);
-      
-      if (result !== undefined && result !== null) {
-        console.log('Updating calculator service with result:', result);
-        this.calculatorService.updateResult(result);
+      const reviews = event.detail?.reviews;
+      if (reviews) {
+        console.log('Updating reviews:', reviews);
+        this.secondAppService.updateResult({ reviews });
       }
     });
   };
@@ -148,7 +147,7 @@ export class ReactWrapperComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    window.removeEventListener('calculatorResult', this.handleCalculatorResult);
+    window.removeEventListener('reviewResult', this.handleReviewEvent);
     if (this.root) {
       this.root.unmount();
       this.root = null;
