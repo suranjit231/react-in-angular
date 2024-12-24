@@ -130,7 +130,7 @@ export class LoginComponent {
 
   // Method to test navigation
   goToReactApp() {
-    this.router.navigate(['/react-app', '123']);
+    this.router.navigate(['/react-app', '7896961622']);
   }
 
   // Handle form submission
